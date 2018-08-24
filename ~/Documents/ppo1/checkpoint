@@ -1,0 +1,2 @@
+model_checkpoint_path: "kaveh.tfs"
+all_model_checkpoint_paths: "kaveh.tfs"
