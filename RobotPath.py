@@ -15,7 +15,8 @@ from math3D import *
 
 
 class env(gym.GoalEnv):
-    def __init__(self, render):
+    def __init__(self, render, max_step=2048):
+        self.max_step = max_step
         J_home = np.array([0,  0,  30,  0,  60,  0])
         n_actions = 6
         max_Joints_offset = 1
@@ -66,7 +67,7 @@ class env(gym.GoalEnv):
         #    'is_success': self._is_success(),
         #}
         reward = self._compute_reward()
-        if self.time_step > 2048:
+        if self.time_step > self.max_step:
             self.done = True
         
         return obs, reward, self.done, self.info
@@ -149,14 +150,14 @@ class env(gym.GoalEnv):
         self.info ={'near_collision':False, 'near_limits':False} 
         if self.collision_distance < 10:
             self.info['near_collision']=True
-            reward -= (10-self.collision_distance)*1000000
+            reward -= (10-self.collision_distance)*10000
             #if self.collision_distance < 5:
                 #self.done = True
                 #print('---------- collision -------------')
                 
         if self.joint_distance < 3:
             self.info['near_limits']=True
-            reward -= (3-self.joint_distance)*1000000
+            reward -= (3-self.joint_distance)*10000
             #if self.joint_distance < 5:
                 #self.done = True
                 #print('---------- collision -------------')

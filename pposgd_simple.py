@@ -127,7 +127,7 @@ def learn(S, env, policy_fn, *,
 
     U.initialize()
     adam.sync()
-    #tf.train.Saver().restore(S, './model')
+    #tf.train.Saver().restore(S, './model/model')
 
     # Prepare for rollouts
     # ----------------------------------------
@@ -141,6 +141,9 @@ def learn(S, env, policy_fn, *,
     rewbuffer = deque(maxlen=100) # rolling buffer for episode rewards
 
     assert sum([max_iters>0, max_timesteps>0, max_episodes>0, max_seconds>0])==1, "Only one time constraint permitted"
+    if MPI.COMM_WORLD.Get_rank()==0:
+        print('Configure rank 0')
+        logger.configure(dir='./graphs', format_strs=['tensorboard','log','csv'])
 
     while True:
         if callback: callback(locals(), globals())
@@ -159,9 +162,9 @@ def learn(S, env, policy_fn, *,
             cur_lrmult =  max(1.0 - float(timesteps_so_far) / max_timesteps, 0)
         else:
             raise NotImplementedError
-
+        
         logger.log("********** Iteration %i ************"%iters_so_far)
-        U.save_state("~/Documents/ppo1/kaveh.tfs")
+        
 
         seg = seg_gen.__next__()
         add_vtarg_and_adv(seg, gamma, lam)
@@ -211,11 +214,13 @@ def learn(S, env, policy_fn, *,
         logger.record_tabular("EpisodesSoFar", episodes_so_far)
         logger.record_tabular("TimestepsSoFar", timesteps_so_far)
         logger.record_tabular("TimeElapsed", time.time() - tstart)
+
         if MPI.COMM_WORLD.Get_rank()==0:
             logger.dump_tabular()
             
-        saver = tf.train.Saver()
-        saver.save(S, './model')
+        U.save_state('./model/RobotPath_model')
+        #saver = tf.train.Saver()
+        #saver.save(S, './model/model')
 
     return pi
 
