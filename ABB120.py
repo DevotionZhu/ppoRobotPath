@@ -2,21 +2,7 @@ import numpy as np
 from pyquaternion import Quaternion
 from copy import deepcopy, copy
 from math import pi, sin, cos, atan2
-import math3D
-
-def AngleAxis(angle,axis):
-    x = axis[0]
-    y = axis[1]
-    z = axis[2]
-
-    c=np.cos(angle)
-    s=np.sin(angle)
-    v=1-c
-
-    R=np.matrix([[x*x*v+c,   x*y*v-z*s, x*z*v+y*s],
-                 [x*y*v+z*s, y*y*v+c,   y*z*v-x*s],
-                 [x*z*v-y*s, y*z*v+x*s, z*z*v+c  ]])
-    return R
+from math3D import *
 
 def FK(theta):
 
@@ -28,11 +14,11 @@ def FK(theta):
     Links_H=np.eye(4)
     for i in range(1,7):
         H_alpha = np.eye(4)
-        H_alpha[0:3,0:3] = AngleAxis(DH_alpha[i - 1]*pi/180, np.array([1,0,0]))
+        H_alpha[0:3,0:3] = R_from_AngleAxis(DH_alpha[i - 1]*pi/180, np.array([1,0,0]))
         H_a = np.eye(4)
         H_a[0,3] = DH_a[i - 1]
         H_theta = np.eye(4)
-        H_theta[0:3,0:3]= AngleAxis((DH_theta_0[i - 1] + theta[i - 1])*pi/180, np.array([0,0,1]))
+        H_theta[0:3,0:3]= R_from_AngleAxis((DH_theta_0[i - 1] + theta[i - 1])*pi/180, np.array([0,0,1]))
         H_d = np.eye(4)
         H_d[2, 3] = DH_d[i - 1]
         Links_H=np.matmul(Links_H,np.matmul(H_alpha,np.matmul(H_a,np.matmul(H_theta,H_d))))
@@ -40,7 +26,7 @@ def FK(theta):
     H_tool=Links_H
     xyz=H_tool[0:3,3]
     R=H_tool[0:3,0:3]
-    Q = math3D.q_from_R(R)
+    Q = q_from_R(R)
 
     return [H_tool,xyz,R,Q]
 

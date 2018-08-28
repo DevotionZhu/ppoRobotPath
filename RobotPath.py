@@ -15,8 +15,9 @@ from math3D import *
 
 
 class env(gym.GoalEnv):
-    def __init__(self, render, max_step=2048):
+    def __init__(self, render, test=False, max_step=2048):
         self.max_step = max_step
+        self.test = test
         J_home = np.array([0,  0,  30,  0,  60,  0])
         n_actions = 6
         max_Joints_offset = 1
@@ -27,6 +28,10 @@ class env(gym.GoalEnv):
             self.sim.connect(self.sim.GUI)
         else:
             self.sim.connect(self.sim.DIRECT)
+        if test:
+            self.sim.resetDebugVisualizerCamera( cameraDistance=1, cameraYaw=90, cameraPitch=-30, cameraTargetPosition=[0.2,0,1] )
+        else:
+            self.sim.resetDebugVisualizerCamera( cameraDistance=1.5, cameraYaw=60, cameraPitch=-40, cameraTargetPosition=[0.2,0,1] )
         
         self.ABB120Id = self.sim.loadURDF("3Dmodels/IRB120/model.urdf", [0, 0, 0.8], useFixedBase=True)
         self.tableId = self.sim.loadURDF("3Dmodels/Table/table.urdf", [0, 0, 0], useFixedBase=True)
@@ -37,9 +42,15 @@ class env(gym.GoalEnv):
         self.line = self.sim.addUserDebugLine(np.array([0, 0, 0.8]),np.array([0, 0, 0.8]),[0,0,1])
         
         os.system('cls')
-        self.J_max =np.array([ 90,  80,  55,  90,  90,  150])
-        self.J_min =np.array([-90, -30, -50, -90, -90, -150])
+        self.J_max = np.array([ 90,  80,  55,  90,  90,  150])
+        self.J_min = np.array([-90, -30, -50, -90, -90, -150])
+        
+        self.Xgoal_max =  np.array([2000, 2000, 2300])
+        self.Xgoal_min = -np.array([2000, 2000, 200])
 
+        self.eulerGoal_max =  np.array([pi, pi, pi])
+        self.eulerGoal_min = -np.array([pi, pi, pi])
+        
         self.state_buffer_size = 1
 
         self.metadata = {
@@ -63,18 +74,19 @@ class env(gym.GoalEnv):
         self._sim_step(action)
         obs = self._get_obs()
         
-        #info = {
-        #    'is_success': self._is_success(),
-        #}
         reward = self._compute_reward()
         if self.time_step > self.max_step:
             self.done = True
+            self.info['reached']=True
         
         return obs, reward, self.done, self.info
     
     def reset(self):
         self.done = False
-        self.info ={'near_collision':False, 'near_limits':False} 
+        self.info = {
+            'reached': False,
+            'collision':False,
+        }
         self.time_step = 0
 
         self._sample_goal_start()
@@ -93,10 +105,11 @@ class env(gym.GoalEnv):
         
     def _sample_goal_start(self):
         while True:
-            J = np.random.rand(6)*(self.J_max-self.J_min)+self.J_min
-            #J=np.array([-50.0,0.0,25.0,0.0,20.0,0.0])+np.random.rand(6)*10
+            if self.test:
+                J=np.array([-50.0,0.0,25.0,0.0,20.0,0.0])
+            else:
+                J = np.random.rand(6)*(self.J_max-self.J_min)+self.J_min               
             collision_distance, joint_distance, xyz, R = self._check_collision(J)
-            #if collision_check==0:
             if collision_distance > 5 and joint_distance > 2:
                 self.J_start = J.copy()
                 self.xyz_start = xyz.copy()
@@ -104,17 +117,19 @@ class env(gym.GoalEnv):
                 self.R_achieved = R.copy()
                 self.J_achieved = J.copy()
                 break
-        while True:
-            J = np.random.rand(6)*(self.J_max-self.J_min)+self.J_min
-            #J=np.array([ 50.0,0.0,25.0,0.0,20.0,0.0])+np.random.rand(6)*10
-            #collision_check, xyz, q = self._check_collision(J)
-            collision_distance, joint_distance, xyz, q = self._check_collision(J)
-            #if collision_check==0 and np.linalg.norm(xyz - self.xyz_start)>100:
-            if collision_distance > 5 and joint_distance > 2 :
-                self.J_goal = J.copy()
-                self.xyz_goal = xyz.copy()
-                self.R_goal = R.copy()
-                break
+
+        if self.test:
+            J=np.array([ 50.0,0.0,25.0,0.0,20.0,0.0])
+            collision_distance, joint_distance, xyz, R = self._check_collision(J)
+            self.xyz_goal = xyz
+            self.Euler_goal = EulerZYX_from_R(R)
+        else:
+            self.xyz_goal = np.random.rand(3)*(self.Xgoal_max-self.Xgoal_min)+self.Xgoal_min
+            self.Euler_goal = np.random.rand(3)*(self.eulerGoal_max-self.eulerGoal_min)+self.eulerGoal_min
+            #self.R_goal = R_from_EulerZYX(self.Euler_goal)
+            #self.H_goal = np.eye(4)
+            #self.H_goal[0:3,0:3]=self.R_goal
+            #self.H_goal[0:3,3]=self.xyz_goal
                 
         self.sim.removeUserDebugItem(self.point1a)
         self.sim.removeUserDebugItem(self.point1b)
@@ -151,38 +166,27 @@ class env(gym.GoalEnv):
         if self.collision_distance < 10:
             self.info['near_collision']=True
             reward -= (10-self.collision_distance)*10000
-            #if self.collision_distance < 5:
-                #self.done = True
+            if self.collision_distance < 5:
+                self.info['colission']=True
                 #print('---------- collision -------------')
                 
         if self.joint_distance < 3:
             self.info['near_limits']=True
             reward -= (3-self.joint_distance)*10000
-            #if self.joint_distance < 5:
-                #self.done = True
+            if self.joint_distance < 1:
+                self.info['colission']=True
                 #print('---------- collision -------------')
                 
-        #angle, u = angle_axis(self.R_goal*np.transpose(self.R_achieved))
-        delta_euler_ZYX = np.linalg.norm(ZYX_from_R(self.R_goal) - ZYX_from_R(self.R_achieved))
-        remained = np.linalg.norm(self.xyz_goal - self.xyz_achieved) + 20*delta_euler_ZYX*180/pi
-        #print('distance, angle:',np.linalg.norm(self.xyz_goal - self.xyz_achieved), angle*180/pi)
-        #remained = np.linalg.norm(self.J_goal - self.J_achieved)
-        reward -= remained
+        delta_euler_ZYX = np.linalg.norm(self.Euler_goal - EulerZYX_from_R(self.R_achieved))
+        distance = np.linalg.norm(self.xyz_goal - self.xyz_achieved) + 100*delta_euler_ZYX*180/pi
+        reward -= distance
 
-        if remained < 10:
+        if distance < 10:
             #reward += 100000
             self.done = True
             print("************** Goal achieved! ****************")
         return reward
         
-    def _is_success(self):
-        remained = np.linalg.norm(self.xyz_goal - self.xyz_achieved)
-        if remained < 10:
-            print("************** Goal achieved! ****************")
-            return True
-        else:
-            return False
-            
     def _check_collision(self,Joints):
         collision_check = 0
         maxDist = 1
@@ -248,21 +252,23 @@ class env(gym.GoalEnv):
 
         return collision_distance*1000, joint_distance, xyz, R
         
-    
-    #def _compute_reward(self, achieved_goal, goal, info):
-    #    # Compute distance between goal and the achieved goal.
-    #   d = goal_distance(achieved_goal, goal)
-    #    if self.reward_type == 'sparse':
-    #        return -(d > self.distance_threshold).astype(np.float32)
-    #    else:
-    #        return -d
-
-    
     def _get_obs(self):
         #print(self.xyz_achieved, self.q_achieved)
+        #obs = np.concatenate([
+        #    self.J_achieved.copy(),
+        #    self.J_goal.copy(),
+        #])
         obs = np.concatenate([
             self.J_achieved.copy(),
-            self.J_goal.copy(),
+            self.xyz_goal.copy(),
+            self.Euler_goal.copy(),
         ])
-
         return obs
+    
+    def capture(self):
+        self.sim.resetDebugVisualizerCamera(  cameraDistance=1, cameraYaw=90, cameraPitch=-30, cameraTargetPosition=[0.2,0,1])
+        img = self.sim.getCameraImage(width= 1600, height= 1200, lightDiffuseCoeff = 1, lightSpecularCoeff = 1, lightDistance = 0.5, shadow = 1, lightDirection=[0,0,3])[2]
+        img = np.reshape(np.array(img),(1200,1600,4),order = 'C')
+        img = np.delete(img, np.s_[-1:], axis=2)
+        img = img*(1./255.)
+        return img

@@ -146,12 +146,12 @@
       </material>
     </visual>
 	<visual>
-      <origin rpy="1.57 0 1.57" xyz="0 -0.035 -0.15"/>
+      <origin rpy="1.57 0 1.57" xyz="-0.003 -0.032 -0.024"/>
       <geometry>
         <mesh filename="tool.stl" scale= "0.001 0.001 0.001"/>
       </geometry>
-      <material name="black">
-        <color rgba="0 0 0 1"/>
+      <material name="blue">
+        <color rgba="0 0 1 1"/>
       </material>
     </visual>
     <collision>
@@ -162,11 +162,11 @@
       <material name="yellow"/>
     </collision>
 	<collision>
-      <origin rpy="1.57 0 1.57" xyz="0 -0.035 -0.15"/>
+      <origin rpy="1.57 0 1.57" xyz="-0.003 -0.032 -0.024"/>
       <geometry>
         <mesh filename="tool.stl" scale= "0.001 0.001 0.001"/>
       </geometry>
-      <material name="black"/>
+      <material name="blue"/>
     </collision>
     <inertial>
       <mass value="0.0136784407912"/>

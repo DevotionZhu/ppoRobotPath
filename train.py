@@ -17,7 +17,7 @@ def train(num_timesteps, seed):
     env = RobotPath.env( render=False, max_step=2048)
     def policy_fn(name, ob_space, ac_space):
         return mlp_policy.MlpPolicy(name=name, ob_space=ob_space, ac_space=ac_space,
-            hid_size=512, num_hid_layers=3)
+            hid_size=256, num_hid_layers=2)
     
     
     pposgd_simple.learn(sess, env, policy_fn,
