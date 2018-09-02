@@ -14,14 +14,13 @@ import scipy.misc
 num_episodes = 100
 
 
-
 def run():
     import mlp_policy
     import baselines.common.tf_util as U
     rank = MPI.COMM_WORLD.Get_rank()
     sess = U.single_threaded_session()
     sess.__enter__()
-    env = RobotPath.env( render=True, test=False, max_step=2048)
+    env = RobotPath.env( render=True, test=False, max_step=5000)
     def policy_fn(name, ob_space, ac_space):
         return mlp_policy.MlpPolicy(name=name, ob_space=ob_space, ac_space=ac_space,
             hid_size=512, num_hid_layers=3)

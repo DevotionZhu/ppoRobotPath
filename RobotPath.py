@@ -45,8 +45,8 @@ class env(gym.GoalEnv):
         self.J_max = np.array([ 90,  80,  55,  90,  90,  150])
         self.J_min = np.array([-90, -30, -50, -90, -90, -150])
         
-        self.Xgoal_max =  np.array([2000, 2000, 2300])
-        self.Xgoal_min = -np.array([2000, 2000, 200])
+        self.Xgoal_max =  np.array([300, 800, 1000])
+        self.Xgoal_min = -np.array([800, 800, 100])
 
         self.eulerGoal_max =  np.array([pi, pi, pi])
         self.eulerGoal_min = -np.array([pi, pi, pi])
@@ -104,19 +104,20 @@ class env(gym.GoalEnv):
         
         
     def _sample_goal_start(self):
-        while True:
-            if self.test:
-                J=np.array([-50.0,0.0,25.0,0.0,20.0,0.0])
-            else:
+        if self.test:
+            J=np.array([-50.0,0.0,25.0,0.0,20.0,0.0])
+        else:
+            while True:
                 J = np.random.rand(6)*(self.J_max-self.J_min)+self.J_min               
-            collision_distance, joint_distance, xyz, R = self._check_collision(J)
-            if collision_distance > 5 and joint_distance > 2:
-                self.J_start = J.copy()
-                self.xyz_start = xyz.copy()
-                self.xyz_achieved = xyz.copy()
-                self.R_achieved = R.copy()
-                self.J_achieved = J.copy()
-                break
+                collision_distance, joint_distance, xyz, R = self._check_collision(J)
+                if collision_distance > 5 and joint_distance > 2:
+                    self.J_start = J.copy()
+                    self.xyz_start = xyz.copy()
+                    self.xyz_achieved = xyz.copy()
+                    self.R_achieved = R.copy()
+                    self.J_achieved = J.copy()
+                    self.Euler_achieved = EulerZYX_from_R(R)
+                    break
 
         if self.test:
             J=np.array([ 50.0,0.0,25.0,0.0,20.0,0.0])
@@ -124,8 +125,17 @@ class env(gym.GoalEnv):
             self.xyz_goal = xyz
             self.Euler_goal = EulerZYX_from_R(R)
         else:
-            self.xyz_goal = np.random.rand(3)*(self.Xgoal_max-self.Xgoal_min)+self.Xgoal_min
-            self.Euler_goal = np.random.rand(3)*(self.eulerGoal_max-self.eulerGoal_min)+self.eulerGoal_min
+            #self.xyz_goal = np.random.rand(3)*(self.Xgoal_max-self.Xgoal_min)+self.Xgoal_min
+            #self.Euler_goal = np.random.rand(3)*(self.eulerGoal_max-self.eulerGoal_min)+self.eulerGoal_min
+            while True:
+                J = np.random.rand(6)*(self.J_max-self.J_min)+self.J_min               
+                collision_distance, joint_distance, xyz, R = self._check_collision(J)
+                if collision_distance > 5 and joint_distance > 2:
+                    self.xyz_goal = xyz.copy()
+                    self.R_goal = R.copy()
+                    self.J_goal = J.copy()
+                    self.Euler_goal = EulerZYX_from_R(R)
+                    break
             #self.R_goal = R_from_EulerZYX(self.Euler_goal)
             #self.H_goal = np.eye(4)
             #self.H_goal[0:3,0:3]=self.R_goal
@@ -177,11 +187,18 @@ class env(gym.GoalEnv):
                 self.info['colission']=True
                 #print('---------- collision -------------')
                 
-        delta_euler_ZYX = np.linalg.norm(self.Euler_goal - EulerZYX_from_R(self.R_achieved))
-        distance = np.linalg.norm(self.xyz_goal - self.xyz_achieved) + 100*delta_euler_ZYX*180/pi
-        reward -= distance
-
-        if distance < 10:
+        #delta_euler_ZYX = np.linalg.norm(self.Euler_goal - EulerZYX_from_R(self.R_achieved))
+        #delta_xyz = np.linalg.norm(self.xyz_goal - self.xyz_achieved)
+        #if delta_xyz > 30:
+        #    distance = delta_xyz + 5*delta_euler_ZYX*180/pi
+        #else:
+        #    distance = delta_xyz + 100*delta_euler_ZYX*180/pi
+        
+        #reward -= distance
+        delta_J = np.linalg.norm(self.J_goal - self.J_achieved) 
+        reward -= delta_J 
+        #if distance < 10:
+        if delta_J < 2:
             #reward += 100000
             self.done = True
             print("************** Goal achieved! ****************")

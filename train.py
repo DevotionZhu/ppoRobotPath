@@ -14,10 +14,10 @@ def train(num_timesteps, seed):
     sess.__enter__()
     workerseed = seed + 10000 * rank
     set_global_seeds(workerseed)
-    env = RobotPath.env( render=False, max_step=2048)
+    env = RobotPath.env( render=False, test=False, max_step=10000)
     def policy_fn(name, ob_space, ac_space):
         return mlp_policy.MlpPolicy(name=name, ob_space=ob_space, ac_space=ac_space,
-            hid_size=256, num_hid_layers=2)
+            hid_size=512, num_hid_layers=3)
     
     
     pposgd_simple.learn(sess, env, policy_fn,
@@ -31,7 +31,7 @@ def train(num_timesteps, seed):
 
 
 def main():
-    train(num_timesteps=1e8, seed=0)
+    train(num_timesteps=1e10, seed=0)
 
 
 if __name__ == '__main__':
