@@ -11,7 +11,8 @@ from PIL import Image
 import scipy.misc
 
 
-num_episodes = 100
+num_episodes = 1000
+
 
 
 def run():
@@ -20,12 +21,13 @@ def run():
     rank = MPI.COMM_WORLD.Get_rank()
     sess = U.single_threaded_session()
     sess.__enter__()
-    env = RobotPath.env( render=True, test=False, max_step=5000)
+    env = RobotPath.env( render=True, test=False, max_step=1500)
     def policy_fn(name, ob_space, ac_space):
         return mlp_policy.MlpPolicy(name=name, ob_space=ob_space, ac_space=ac_space,
             hid_size=512, num_hid_layers=3)
     
     pi = policy_fn('pi', env.observation_space, env.action_space)
+    #tf.train.Saver().restore(sess, './model/RobotPath_model')
     U.load_state('./model/RobotPath_model')
     
     #plt.ion()
@@ -41,7 +43,7 @@ def run():
             action = pi.act(False, obs)[0]
             #end_time = time.time()
             #print("elapsed time:",end_time-start_time)
-            obs, reward, done, info = env.step(action*0.1)
+            obs, reward, done, info = env.step(action*0.2)
             #img = env.capture()
             #image.set_data(img)
             #ax.plot([0])

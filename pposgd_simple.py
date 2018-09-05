@@ -218,9 +218,9 @@ def learn(S, env, policy_fn, *,
         if MPI.COMM_WORLD.Get_rank()==0:
             logger.dump_tabular()
             
-        #U.save_state('./model/RobotPath_model')
-        saver = tf.train.Saver()
-        saver.save(S, './model/RobotPath_model')
+        U.save_state('./model/RobotPath_model')
+        #saver = tf.train.Saver()
+        #saver.save(S, './model/model')
 
     return pi
 

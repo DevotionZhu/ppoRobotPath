@@ -4,13 +4,22 @@ This repository is the codes for my recent paper: **Real-time Motion Planning fo
 
 This code employs an state-of-the-art deep reinforcement learning approach, Proximal Policy Optimization (PPO) introduced by OpenAI, for online trajectory generation of industrial robotic arms. Pybullet environment is used for simulation.
 
+## Simulation results:
+
 <p align="center">
-    <img src="https://github.com/kavehkamali/RobotPath/blob/master/demo.gif" width="450">
+    <img src="https://github.com/kavehkamali/herRobotPath/blob/master/demo1.gif" width="450">
+</p>
+
+## Experiments on a real ABB robot:
+
+<p align="center">
+    <img src="https://github.com/kavehkamali/herRobotPath/blob/master/experiment.jpg" width="450">
 </p>
 
 <p align="center">
     <img src="https://github.com/kavehkamali/herRobotPath/blob/master/demo2.gif" width="450">
 </p>
+
 For details on PPO, please read the paper.
 
 **Schulman J, Wolski F, Dhariwal P, Radford A, Klimov O. Proximal policy optimization algorithms. arXiv preprint arXiv:1707.06347. 2017 Jul 20.**

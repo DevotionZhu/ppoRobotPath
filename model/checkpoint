@@ -1,0 +1,2 @@
+model_checkpoint_path: "RobotPath_model"
+all_model_checkpoint_paths: "RobotPath_model"
