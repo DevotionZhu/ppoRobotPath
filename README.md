@@ -8,7 +8,7 @@ This code employs an state-of-the-art deep reinforcement learning approach, Prox
 
 <p align="center">
     <img src="https://github.com/kavehkamali/ppoRobotPath/blob/master/train.gif" width="370">
-    <img src="https://github.com/kavehkamali/ppoRobotPath/blob/master/test.gif" width="450">
+    <img src="https://github.com/kavehkamali/ppoRobotPath/blob/master/test.gif" width="440">
 </p>
 
 ## Experiments on a real ABB robot:
