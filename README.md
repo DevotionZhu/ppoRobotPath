@@ -7,16 +7,13 @@ This code employs an state-of-the-art deep reinforcement learning approach, Prox
 ## Simulation results:
 
 <p align="center">
-    <img src="https://github.com/kavehkamali/herRobotPath/blob/master/demo1.gif" width="450">
+    <img src="https://github.com/kavehkamali/ppoRobotPath/blob/master/demo1.gif" width="450">
 </p>
 
 ## Experiments on a real ABB robot:
 
 <p align="center">
-    <img src="https://github.com/kavehkamali/herRobotPath/blob/master/experiment.jpg" width="450">
-</p>
-
-<p align="center">
+    <img src="https://github.com/kavehkamali/ppoRobotPath/blob/master/experiment.jpg" width="450">
     <img src="https://github.com/kavehkamali/herRobotPath/blob/master/demo2.gif" width="450">
 </p>
 
